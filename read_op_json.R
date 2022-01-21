@@ -63,11 +63,22 @@ keypoint_lab <- c("Nose",
 "RHeel")
 
 walk <- walk %>% mutate(kp = factor(keypoints, levels = 0:24, labels = keypoint_lab),
-                        yloc = yloc*-1) 
+                        yloc = 1080-yloc) 
 
 walk_filt <- walk %>% filter(!is.na(kp), conf > 0)
 
-walk_filt %>% filter(kp == "Nose") %>% ggplot(aes(x = xloc, y = yloc)) + geom_point() + xlim(0,1920) + ylim(-1080, 0)
-walk_filt %>% filter(kp == "RKnee") %>% ggplot(aes(x = xloc, y = loc, color = person)) + geom_point()
+walk_filt %>% filter(kp == "Nose") %>% ggplot(aes(x = xloc, y = yloc)) + geom_point() + xlim(0,1920) + ylim(0, 1080)
+walk_filt %>% filter(kp == "RKnee") %>% ggplot(aes(x = xloc, y = yloc, color = person)) + geom_point() + xlim(0,1920) + ylim(0, 1080)
 
+nose_diff <- walk_filt %>% filter(kp %in% c("MidHip","Nose"), person == 1) %>% 
+  arrange(file_num) %>% add_count(file_num) %>% filter(n == 2) %>% group_by(file_num) %>% 
+  mutate(nose_diff = lag(yloc)-yloc, kp = "Nose") %>% drop_na(nose_diff)
 
+knee_diff <- walk_filt %>% filter(kp %in% c("MidHip","RKnee"), person == 1) %>% 
+  arrange(file_num) %>% add_count(file_num) %>% filter(n == 2) %>% group_by(file_num) %>% 
+  mutate(knee_diff = yloc - lag(yloc), kp = "RKnee") %>% drop_na(knee_diff)
+
+diffs <- left_join(nose_diff, knee_diff, by = "file_num") %>% pivot_longer(cols = c("nose_diff", "knee_diff"))
+diffs %>% ggplot(aes(x = file_num, y = value, color = name )) + geom_point()
+  
+  
