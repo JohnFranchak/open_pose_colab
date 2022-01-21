@@ -12,7 +12,7 @@ extract_keypoints <- function(file_name) {
   frame <- fromJSON(file_name)
   file_num <- as.numeric(str_extract(file_name,"\\d\\d\\d\\d\\d\\d\\d\\d\\d\\d\\d\\d"))
   labs <- rep(c("xloc","yloc","conf"),25)
-  keypoints <- floor(seq(1:75)/3)
+  keypoints <- ceiling(seq(1:75)/3) - 1
   if (length(frame$people$pose_keypoints_2d) > 0) {
     first_loop = TRUE
     for (i in 1:length(frame$people$pose_keypoints_2d)) {
@@ -32,7 +32,7 @@ extract_keypoints <- function(file_name) {
   return(output)
 }
 
-extract_keypoints(files[40])
+temp <- extract_keypoints(files[40])
 
 walk <- map_dfr(files, ~ extract_keypoints(.x))
 
@@ -62,5 +62,12 @@ keypoint_lab <- c("Nose",
 "RSmallToe",
 "RHeel")
 
-walk <- walk %>% mutate(kp = factor(keypoints, levels = 0:24, labels = keypoint_lab))
+walk <- walk %>% mutate(kp = factor(keypoints, levels = 0:24, labels = keypoint_lab),
+                        yloc = yloc*-1) 
+
+walk_filt <- walk %>% filter(!is.na(kp), conf > 0)
+
+walk_filt %>% filter(kp == "Nose") %>% ggplot(aes(x = xloc, y = yloc)) + geom_point() + xlim(0,1920) + ylim(-1080, 0)
+walk_filt %>% filter(kp == "RKnee") %>% ggplot(aes(x = xloc, y = loc, color = person)) + geom_point()
+
 
