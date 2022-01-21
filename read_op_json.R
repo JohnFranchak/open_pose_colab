@@ -18,7 +18,7 @@ extract_keypoints <- function(file_name) {
     for (i in 1:length(frame$people$pose_keypoints_2d)) {
       values <- frame$people$pose_keypoints_2d[[i]]
       temp <- tibble(file_num = file_num, person = i, keypoints = keypoints, values = values, labs = labs)
-      temp %>% pivot_wider(id_cols = c("file_num", "person", "keypoints"), names_from = labs, values_from = values)
+      temp <- temp %>% pivot_wider(id_cols = c("file_num", "person", "keypoints"), names_from = labs, values_from = values)
       if (first_loop) {
         output <- temp
         first_loop <-  FALSE
@@ -32,6 +32,35 @@ extract_keypoints <- function(file_name) {
   return(output)
 }
 
-extract_keypoints(files[503])
+extract_keypoints(files[40])
 
-map_dfr(files, ~ fromJSON(.x) %>% as_tibble(.$people) %>% mutate(fname = str_extract(.x,"\\d\\d\\d\\d\\d\\d\\d\\d\\d\\d\\d\\d"), .before = version) %>% print)
+walk <- map_dfr(files, ~ extract_keypoints(.x))
+
+keypoint_lab <- c("Nose",
+"Neck",
+"RShoulder",
+"RElbow",
+"RWrist",
+"LShoulder",
+"LElbow",
+"LWrist",
+"MidHip",
+"RHip",
+"RKnee",
+"RAnkle",
+"LHip",
+"LKnee",
+"LAnkle",
+"REye",
+"LEye",
+"REar",
+"LEar",
+"LBigToe",
+"LSmallToe",
+"LHeel",
+"RBigToe",
+"RSmallToe",
+"RHeel",
+"Background")
+
+
